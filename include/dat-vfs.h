@@ -16,16 +16,6 @@
 
 namespace DatVFS {
     /**
-     * Some exceptions that can be returned from operations
-     */
-    enum class DatVFSException {
-        /** The file or folder already exists */
-        EXISTS,
-        /** The file or folder was not found */
-        NOTFOUND
-    };
-
-    /**
      * A root or folder node in the Virtual File System
      */
     class DatVFS {
@@ -142,7 +132,7 @@ namespace DatVFS {
 
             int count = 0;
             for (const auto& [path, idvfsFile]: inserter->getAllFiles()) {
-                if (mountFile(path, idvfsFile, createFolders))++count;
+                if (mountFile(path, idvfsFile, createFolders)) ++count;
                 else {
                     inserter->handleInsertFailure(path, idvfsFile);
                 }
@@ -175,7 +165,7 @@ namespace DatVFS {
         }
 
         /**
-         * Remove a folder from the VFS, deleting all files and folders contained within
+         * Remove a folder from the VFS, deleting it and all files and folders contained within
          * @param path The path to the folder to remove
          * @return True if successful
          */
@@ -188,6 +178,8 @@ namespace DatVFS {
             }
 
             folders.erase((std::string) path);
+
+            // File and subfolder deletion is handled by the destructor
             delete folder;
             return true;
         }
@@ -232,7 +224,7 @@ namespace DatVFS {
         // Util
         /**
          * Check if a file or folder exists
-         * @param path
+         * @param path The path to the file/folder
          * @return positive if a file, negative if a folder, 0 for doesn't exist
          */
         int exists(const DatPath& path) {
