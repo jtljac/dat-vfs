@@ -10,6 +10,7 @@
 #include <cstring>
 #include <algorithm>
 
+#include "dat-path.h"
 #include "dat-vfs-file.h"
 #include "dat-vfs-file-inserter.h"
 
@@ -22,35 +23,6 @@ namespace DatVFS {
         EXISTS,
         /** The file or folder was not found */
         NOTFOUND
-    };
-
-    class DatPath {
-        const std::string path;
-
-    public:
-
-        DatPath() {};
-
-        DatPath(const std::string& path) : path(path.substr(path.find_first_not_of('/'), path.find_last_not_of('/'))){}
-
-        DatPath(DatPath& path) : path(path.path) {}
-
-        explicit operator std::string() const {
-            return path;
-        }
-
-        [[nodiscard]] DatPath increment(size_t levels = 1) const {
-            return {path.substr(path.find_first_of('/') + 1)};
-        }
-
-        [[nodiscard]] DatPath getRoot() const {
-
-            return path.substr(0, path.find_first_of('/'));
-        }
-
-        [[nodiscard]] size_t depth() const {
-            return std::count(path.begin(), path.end(), '/') + 1;
-        }
     };
 
     /**
