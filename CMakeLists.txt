@@ -10,4 +10,14 @@ target_sources(dat-vfs PRIVATE
         source/dat-vfs.cpp
 )
 
+# Examples
 add_subdirectory(examples)
+
+# Tests
+set("DATVFS_ENABLE_TESTS" OFF CACHE BOOL "Whether to enable testing")
+if (${DATVFS_ENABLE_TESTS})
+    message("Testing has been enabled")
+    add_subdirectory(tests)
+else()
+    message("Testing has been disabled")
+endif ()
