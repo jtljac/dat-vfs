@@ -5,10 +5,32 @@
 #include <catch2/catch.hpp>
 
 #include <dat-path.h>
+#include <filesystem>
+
+using namespace DatVFS;
 
 TEST_CASE("DatPath initialisation", "[DatPath]") {
+
+    SECTION("Empty Initialisation") {
+        DatPath test;
+        REQUIRE((std::string) test == ""); // NOLINT(readability-container-size-empty)
+    }
+
     SECTION("Empty String Initialisation") {
         REQUIRE_NOTHROW(DatPath(""));
+
+        DatPath test("");
+        REQUIRE((std::string) test == ""); // NOLINT(readability-container-size-empty)
+    }
+
+    SECTION("String Initialisation") {
+        DatPath test(std::string("a/string/path"));
+        REQUIRE((std::string) test == "a/string/path"); // NOLINT(readability-container-size-empty)
+    }
+
+    SECTION("Char Array Initialisation") {
+        DatPath test("a/char/array/path");
+        REQUIRE((std::string) test == "a/char/array/path"); // NOLINT(readability-container-size-empty)
     }
 
     SECTION("Correctly formats path") {

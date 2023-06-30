@@ -27,7 +27,7 @@ namespace DatVFS {
          */
         DatPath(const std::string& path); // NOLINT(google-explicit-constructor)
 
-        DatPath(DatPath& path) = default;
+        DatPath(const char* path) : DatPath(std::string(path)) {} // NOLINT(google-explicit-constructor)
 
         explicit operator std::string() const;
 
