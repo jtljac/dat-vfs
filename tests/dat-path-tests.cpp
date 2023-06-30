@@ -5,12 +5,10 @@
 #include <catch2/catch.hpp>
 
 #include <dat-path.h>
-#include <filesystem>
 
-using namespace DatVFS;
+using namespace DVFS;
 
 TEST_CASE("DatPath initialisation", "[DatPath]") {
-
     SECTION("Empty Initialisation") {
         DatPath test;
         REQUIRE((std::string) test == ""); // NOLINT(readability-container-size-empty)

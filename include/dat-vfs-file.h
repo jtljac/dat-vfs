@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <fstream>
 
-namespace DatVFS {
+namespace DVFS {
     /**
      * An interface for files stored inside the VFS
      */
@@ -51,6 +51,8 @@ namespace DatVFS {
         std::filesystem::path filePath;
 
     public:
+        LooseDVFSFile(const std::filesystem::path& filePath) : filePath(filePath) {}
+
         uint64_t fileSize() const override {
             return isValidFile() ? file_size(filePath) : 0;
         }

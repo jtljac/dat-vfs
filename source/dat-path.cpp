@@ -5,11 +5,15 @@
 #include "../include/dat-path.h"
 
 #include <algorithm>
+#include <cassert>
 
-DatVFS::DatPath::DatPath(const std::string& path) {
+DVFS::DatPath::DatPath(std::string path) {
     if (path.empty()) {
         return;
     }
+
+    // Ensure backslashes aren't used
+    assert(path.find('\\') == std::string::npos);
 
     std::string::size_type startIndex = path.find_first_not_of('/');
     std::string::size_type endIndex = path.find_last_not_of('/');
@@ -20,15 +24,15 @@ DatVFS::DatPath::DatPath(const std::string& path) {
                              : std::string::npos);
 }
 
-DatVFS::DatPath::operator std::string() const {
+DVFS::DatPath::operator std::string() const {
     return path;
 }
 
-bool DatVFS::DatPath::operator==(const DatPath& rh) const {
+bool DVFS::DatPath::operator==(const DatPath& rh) const {
     return path == rh.path;
 }
 
-DatVFS::DatPath DatVFS::DatPath::increment(size_t levels) const {
+DVFS::DatPath DVFS::DatPath::increment(size_t levels) const {
     std::string::size_type index = 0;
     while (levels-- > 0) {
         std::string::size_type newIndex = path.find_first_of('/', index);
@@ -39,16 +43,16 @@ DatVFS::DatPath DatVFS::DatPath::increment(size_t levels) const {
     return {path.substr(index)};
 }
 
-DatVFS::DatPath DatVFS::DatPath::getRoot() const {
+DVFS::DatPath DVFS::DatPath::getRoot() const {
     if (empty()) return {};
     return {path.substr(0, path.find_first_of('/'))};
 }
 
-size_t DatVFS::DatPath::depth() const {
+size_t DVFS::DatPath::depth() const {
     if (path.empty()) return 0;
     return std::count(path.begin(), path.end(), '/') + 1;
 }
 
-bool DatVFS::DatPath::empty() const {
+bool DVFS::DatPath::empty() const {
     return path.empty();
 }

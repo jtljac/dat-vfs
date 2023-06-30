@@ -15,7 +15,7 @@
 #include "dat-vfs-file.h"
 #include "dat-vfs-file-inserter.h"
 
-namespace DatVFS {
+namespace DVFS {
     /**
      * A root or folder node in the Virtual File System
      */
@@ -117,8 +117,8 @@ namespace DatVFS {
          * @param createFolders Whether to create parent folders for the basePath and any paths for files being mounted
          * @return the number of files mounted
          */
-        int mountFiles(const DatPath& basePath, IDVFSFileInserter* inserter, bool createFolders = false) {
-            if (basePath.depth() > 1) {
+        int mountFiles(const DatPath& basePath, const IDVFSFileInserter& inserter, bool createFolders = false) {
+            if (basePath.depth() > 0) {
                 DatVFS* folder = getFolder(basePath.getRoot());
                 if (folder == nullptr) {
                     if (!createFolders) return 0;
@@ -132,10 +132,10 @@ namespace DatVFS {
             }
 
             int count = 0;
-            for (const auto& [path, idvfsFile]: inserter->getAllFiles()) {
+            for (const auto& [path, idvfsFile]: inserter.getAllFiles()) {
                 if (mountFile(path, idvfsFile, createFolders)) ++count;
                 else {
-                    inserter->handleInsertFailure(path, idvfsFile);
+                    inserter.handleInsertFailure(path, idvfsFile);
                 }
             }
 
@@ -398,18 +398,23 @@ namespace DatVFS {
         std::string tree(const std::string& prefix = "") const {
             std::stringstream stream;
 
-
             bool noFiles = files.empty();
             {
                 auto it = folders.begin();
                 while (it != folders.end()) {
-                    bool end = std::next(it) == folders.end() && noFiles;
-
                     const std::string& name = it->first;
                     const DatVFS* folder = it->second;
+                    bool end = std::next(it) == folders.end() && noFiles;
 
-                    stream << prefix << (end ? "└── " : "├── ") << name << std::endl
-                           << folder->tree(end ? "    " : "│   ");
+                    stream << prefix << (end ? "└── " : "├── ") << name << std::endl;
+
+                    if (name == "." || name == "..") {
+                        ++it;
+                        continue;
+                    }
+
+                    stream << folder->tree(prefix + (end ? "    " : "│   "));
+                    ++it;
                 }
             }
 
@@ -419,6 +424,7 @@ namespace DatVFS {
                     const std::string& name = it->first;
                     bool end = std::next(it) == files.end();
                     stream << prefix << (end ? "└── " : "├── ") << name << std::endl;
+                    ++it;
                 }
             }
 

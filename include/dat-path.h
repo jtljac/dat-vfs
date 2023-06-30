@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace DatVFS {
+namespace DVFS {
 /**
  * A wrapper for strings that represents paths in a DatVFS
  * <br>
@@ -25,7 +25,7 @@ namespace DatVFS {
          * Create a path
          * @param path A string representing the path
          */
-        DatPath(const std::string& path); // NOLINT(google-explicit-constructor)
+        DatPath(std::string path); // NOLINT(google-explicit-constructor)
 
         DatPath(const char* path) : DatPath(std::string(path)) {} // NOLINT(google-explicit-constructor)
 

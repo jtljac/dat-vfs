@@ -9,7 +9,7 @@
 #include <utility>
 #include "dat-vfs-file.h"
 
-namespace DatVFS {
+namespace DVFS {
     /**
      * An interface for inserting files into a VFS
      */
@@ -27,10 +27,24 @@ namespace DatVFS {
          * @param path The path of the file
          * @param idvfsFile The file that failed to insert
          */
-        virtual void handleInsertFailure(const std::string& path, IDVFSFile* idvfsFile) {
+        virtual void handleInsertFailure(const std::string& path, IDVFSFile* idvfsFile) const {
             delete idvfsFile;
         }
     };
 
+    struct DVFSLooseFileInserter : public IDVFSFileInserter {
+        std::filesystem::path directory;
+        DVFSLooseFileInserter(std::filesystem::path  directory) : directory(std::move(directory)) {}
 
+        [[nodiscard]] std::vector<pair> getAllFiles() const override {
+            std::vector<pair> files;
+
+            for (const auto& it: std::filesystem::recursive_directory_iterator(directory)) {
+                if (it.is_directory()) continue;
+                files.emplace_back(std::filesystem::relative(it.path(), directory).string(), new LooseDVFSFile(it.path()));
+            }
+
+            return files;
+        }
+    };
 }
