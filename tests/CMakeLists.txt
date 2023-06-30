@@ -9,6 +9,8 @@ include(Catch)
 add_executable(dat-vfs-tests
         unit-test.cpp
         dat-path-tests.cpp
+        dat-vfs-tests.cpp
+
 )
 
 target_link_libraries(dat-vfs-tests PRIVATE Catch2::Catch2)
