@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <cstring>
 #include <algorithm>
+#include <numeric>
 
 #include "dat-path.h"
 #include "dat-vfs-file.h"
@@ -219,8 +220,6 @@ namespace DatVFS {
             return it != folders.end() ? it->second : nullptr;
         }
 
-        // Get Files (recursive, filter)
-
         // Util
         /**
          * Check if a file or folder exists
@@ -237,13 +236,193 @@ namespace DatVFS {
             // Avoids branching, assumes that there will never be a folder and a file with the same name
             return files.count((std::string) path.getRoot()) + (folders.count((std::string) path.getRoot()) * -1);
         }
-        // List Files
-        // List Folders
-        // Size
-        // Prune
-        // Count Files (recursive, filter)
-        // Count Folders (recursive, filter)
-        // Tree
 
+        /**
+         * Check if the given folder is empty
+         * @param path The path to the folder
+         * @return true if the given folder contains no files or folders
+         */
+         bool empty(const DatPath& path = DatPath()) {
+            if (path.depth() > 0) {
+                DatVFS* folder = getFolder(path.getRoot());
+                if (folder == nullptr) return false;
+                else return folder->empty(path.increment());
+            }
+
+            return folders.empty() && files.empty();
+         }
+
+         /**
+          * Check if this folder is the root of the VFS
+          * @return true if this folder is the roof of the VFS
+          */
+         bool isRoot(const std::filesystem::path& test) {
+             return getFolder("..") == this;
+         }
+
+        /**
+         * List the files in a directory
+         * @param path The path to the folder to list (empty for the current folder)
+         * @return A vector containing the names of all the files at the path
+         */
+        std::vector<std::string> listFiles(const DatPath& path = DatPath()) {
+            if (path.depth() > 0) {
+                DatVFS* folder = getFolder(path.getRoot());
+                if (folder == nullptr) return {};
+                else return folder->listFiles(path.increment());
+            }
+
+            std::vector<std::string> fileNames;
+            fileNames.reserve(files.size());
+            std::transform(files.begin(), files.end(), std::back_inserter(fileNames), [](const auto& pair){return pair.first;});
+
+            return fileNames;
+        }
+
+        /**
+         * List the folders in a directory
+         * @param path The path to the folder to list (empty for the current folder)
+         * @return A vector containing the names of all the folders at the path
+         */
+        std::vector<std::string> listFolders(const DatPath& path = DatPath()) {
+            if (path.depth() > 0) {
+                DatVFS* folder = getFolder(path.getRoot());
+                if (folder == nullptr) return {};
+                else return folder->listFiles(path.increment());
+            }
+
+            std::vector<std::string> folderNames;
+            folderNames.reserve(folders.size());
+            std::transform(folders.begin(), folders.end(), std::back_inserter(folderNames), [](const auto& pair){return pair.first;});
+
+            return folderNames;
+        }
+
+        /**
+         * Remove folders from the given directory if they're empty
+         * @param path The path to the folder start pruning from (empty for the current folder)
+         * @param recursive Whether to also prune sub directories of the given directory
+         * @return The number of folders deleted
+         */
+        int prune(const DatPath& path = DatPath(), bool recursive = false) {
+            if (path.depth() > 0) {
+                DatVFS* folder = getFolder(path.getRoot());
+                if (folder == nullptr) return {};
+                else return folder->prune(path.increment(), recursive);
+            }
+
+            int count = 0;
+            auto it = folders.begin();
+            while (it != folders.end()) {
+                DatVFS* folder = it->second;
+
+                // Do recursive first, so we can prune a folder that becomes empty after pruning
+                if (recursive) {
+                    count += folder->prune(path, recursive);
+                }
+
+                if (folder->empty()) {
+                    folders.erase(it++);
+                    ++count;
+                }
+            }
+
+            return count;
+        }
+
+        // Count Files (recursive, filter)
+        /**
+         * Count the number of files that match the filter in the given folder
+         * <br>
+         * The default filter matches all files
+         * @param path The path to the folder to start counting from, empty for the current folder
+         * @param recursive Whether to count files in subfolders too
+         * @param predicate The filter that decides which files to count
+         * @return The number of files that
+         */
+        int countFiles(const DatPath& path = DatPath(),
+                       bool recursive = false,
+                       const std::function<bool(const std::string&, IDVFSFile*)>& predicate = [](const std::string&, IDVFSFile*){return true;}) {
+            if (path.depth() > 0) {
+                DatVFS* folder = getFolder(path.getRoot());
+                if (folder == nullptr) return {};
+                else return folder->countFiles(path.increment(), recursive, predicate);
+            }
+
+            int count = std::accumulate(files.begin(), files.end(), 0, [&predicate](int acc, const auto& pair){
+                return predicate(pair.first, pair.second) ? acc + 1 : acc;
+            });
+
+            if (recursive) {
+                count += std::accumulate(folders.begin(), folders.end(), 0, [&predicate, &path](int acc, const auto& pair) {
+                    return acc + pair.second->countFiles(path, true, predicate);
+                });
+            };
+
+            return count;
+        }
+
+        /**
+         * Count the number of folders that match the filter in the given folder
+         * <br>
+         * The default filter matches all folders
+         * <br>
+         * When recursive is true, the filter will not prevent searching inside folders that do not match
+         * @param path The path to the folder to start counting from, empty for the current folder
+         * @param recursive Whether to count folders in subfolders too
+         * @param predicate The filter that decides which folders to count
+         * @return The number of files that
+         */
+        int countFolders(const DatPath& path = DatPath(),
+                       bool recursive = false,
+                       const std::function<bool(const std::string&, DatVFS*)>& predicate = [](const std::string&, DatVFS*){return true;}) {
+            if (path.depth() > 0) {
+                DatVFS* folder = getFolder(path.getRoot());
+                if (folder == nullptr) return {};
+                else return folder->countFolders(path.increment(), recursive, predicate);
+            }
+
+            int count = std::accumulate(folders.begin(), folders.end(), 0, [&path, recursive, &predicate](int acc, const auto& pair){
+                if (recursive) acc += pair.second->countFolders(path, recursive, predicate);
+                return predicate(pair.first, pair.second) ? acc + 1 : acc;
+            });
+
+            return count;
+        }
+
+        /**
+         * Generate a string displaying the structure of the VFS
+         * @param depth The current depth, used for calculating how to display the file/folder in the tree
+         * @return A string representing the structure of the VFS
+         */
+        std::string tree(const std::string& prefix = "") const {
+            std::stringstream stream;
+
+
+            bool noFiles = files.empty();
+            {
+                auto it = folders.begin();
+                while (it != folders.end()) {
+                    bool end = std::next(it) == folders.end() && noFiles;
+
+                    const std::string& name = it->first;
+                    const DatVFS* folder = it->second;
+
+                    stream << prefix << (end ? "└── " : "├── ") << name << std::endl
+                           << folder->tree(end ? "    " : "│   ");
+                }
+            }
+
+            if (!noFiles) {
+                auto it = files.begin();
+                while (it != files.end()) {
+                    const std::string& name = it->first;
+                    bool end = std::next(it) == files.end();
+                    stream << prefix << (end ? "└── " : "├── ") << name << std::endl;
+                }
+            }
+
+            return stream.str();
+        }
     };
 }
