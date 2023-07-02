@@ -5,31 +5,58 @@
 #pragma once
 
 #include <cstdint>
-#include <fstream>
+#include <filesystem>
 
 namespace DVFS {
     /**
      * An interface for files stored inside the VFS
      */
     class IDVFSFile {
+        /**
+         * Reference counting for hard links
+         * <br>
+         * This value counts the number of times the DVFSFile is stored in a VFS. When it is 0, it means no VFS stores
+         * it and it can be removed (usually by the VFS that unmounted it).
+         */
         uint8_t references = 0;
-
     public:
-
         virtual ~IDVFSFile() = default;
+
+        /**
+         * Increment the number of references to this DVFSFile there are
+         * <br>
+         * Warning, this function should only be used by the DatVFS, you probably shouldn't touch it
+         * @return The new number of references that exist for this DVFSFile
+         */
+        uint8_t incrementReferences();
+
+        /**
+         * Decrement the number of references to this DVFSFile there are
+         * <br>
+         * Warning, this function should only be used by the DatVFS, you probably shouldn't touch it
+         * @return The new number of references that exist for this DVFSFile
+         */
+        uint8_t decrementReferences();
+
+        /**
+         * Get the number of references to this DVFSFile there are
+         * @return The current number of references that exist for this DVFSFile
+         */
+        [[nodiscard]] uint8_t getReferenceCount() const;
+
         /**
          * Get the size of the file
          * <br>
          * This is the full uncompressed size as would be required to hold the raw file in memory
          * @return The size of the file
          */
-        virtual uint64_t fileSize() const = 0;
+        [[nodiscard]] virtual uint64_t fileSize() const = 0;
 
         /**
          * Check the file is valid and able to be fetched
          * @return True if the file is valid
          */
-        virtual bool isValidFile() const = 0;
+        [[nodiscard]] virtual bool isValidFile() const = 0;
 
         /**
          * Get the content of the file and store it in the given buffer
@@ -51,25 +78,19 @@ namespace DVFS {
         std::filesystem::path filePath;
 
     public:
-        LooseDVFSFile(const std::filesystem::path& filePath) : filePath(filePath) {}
+        /**
+         * Create a LooseDVFSFile pointing to the file at the given path
+         * @param filePath The path to the file on disk
+         */
+        LooseDVFSFile(std::filesystem::path  filePath) : filePath(std::move(filePath)) {} // NOLINT(google-explicit-constructor)
 
-        uint64_t fileSize() const override {
-            return isValidFile() ? file_size(filePath) : 0;
-        }
+        /** @inherit */
+        [[nodiscard]] uint64_t fileSize() const override;
 
-        bool isValidFile() const override {
-            return !filePath.empty() && exists(filePath) && !is_directory(filePath);
-        }
+        /** @inherit */
+        [[nodiscard]] bool isValidFile() const override;
 
-        bool getContent(char* buffer) const override {
-            if (!isValidFile()) return false;
-
-            std::ifstream fileStream(filePath, std::ios::in | std::ios::binary | std::ios::ate);
-
-            std::streamsize fileSize = fileStream.tellg();
-            fileStream.seekg(0);
-
-            return fileStream.read(buffer, fileSize).good();
-        }
+        /** @inherit */
+        bool getContent(char* buffer) const override;
     };
 }
