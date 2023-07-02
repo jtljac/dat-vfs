@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <cassert>
 
-DVFS::DatPath::DatPath(std::string path) {
+std::string DVFS::DatPath::sanitisePath(std::string path) {
     if (path.empty()) {
-        return;
+        return std::move(path);
     }
 
     // Ensure backslashes aren't used
@@ -18,7 +18,7 @@ DVFS::DatPath::DatPath(std::string path) {
     std::string::size_type startIndex = path.find_first_not_of('/');
     std::string::size_type endIndex = path.find_last_not_of('/');
 
-    this->path = path.substr(startIndex,
+    return path.substr(startIndex,
                              endIndex != std::string::npos
                              ? endIndex + 1 - startIndex
                              : std::string::npos);
@@ -30,6 +30,36 @@ DVFS::DatPath::operator std::string() const {
 
 bool DVFS::DatPath::operator==(const DatPath& rh) const {
     return path == rh.path;
+}
+
+DVFS::DatPath DVFS::DatPath::operator/(const std::string& subPath) const {
+    // Avoid sanitising twice by creating an empty DatPath and setting its path manually, we have to sanitise once this
+    // way as we don't sanitise the middle of the path, only the ends
+    DatPath newPath;
+    // If this path/sub-path is empty then we have to make sure we don't append a "/" at the beginning/end
+    newPath.path = empty()
+            ? sanitisePath(subPath)
+            : subPath.empty()
+                    ? path
+                    : path + "/" + sanitisePath(subPath);
+    return newPath;
+}
+
+DVFS::DatPath DVFS::DatPath::operator/(const char* subPath) const {
+    return operator/(std::string(subPath));
+}
+
+DVFS::DatPath DVFS::DatPath::operator/(const DVFS::DatPath& subPath) const {
+    // By using two DatPaths we can guarantee that both sides are sanitised, so avoid extra sanitise by creating
+    // an empty DatPath and setting its path manually
+    DatPath newPath;
+    // If this path/sub-path is empty then we have to make sure we don't append a "/" at the beginning/end
+    newPath.path = empty()
+            ? subPath.path
+            : subPath.empty()
+                    ? path
+                    : (path + "/" + subPath.path);
+    return newPath;
 }
 
 DVFS::DatPath DVFS::DatPath::increment(size_t levels) const {

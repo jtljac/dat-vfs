@@ -15,6 +15,8 @@ namespace DVFS {
     class DatPath {
         std::string path;
 
+        static std::string sanitisePath(std::string path);
+
     public:
         /**
          * Create an empty path
@@ -25,13 +27,33 @@ namespace DVFS {
          * Create a path
          * @param path A string representing the path
          */
-        DatPath(std::string path); // NOLINT(google-explicit-constructor)
-
+        DatPath(std::string path) : path(sanitisePath(std::move(path))) {} // NOLINT(google-explicit-constructor)
         DatPath(const char* path) : DatPath(std::string(path)) {} // NOLINT(google-explicit-constructor)
 
         explicit operator std::string() const;
 
         bool operator==(const DatPath& rh) const;
+
+        /**
+         * Append the sub-path onto the existing path
+         * @param subPath The path to append
+         * @return A new DatPath made out of the existing lh one and the given rh string
+         */
+        DatPath operator /(const std::string& subPath) const;
+
+        /**
+         * Append the sub-path onto the existing path
+         * @param subPath The path to append
+         * @return A new DatPath made out of the existing lh one and the given rh string
+         */
+        DatPath operator /(const char* subPath) const;
+
+        /**
+         * Append the sub-path onto the existing path
+         * @param subPath The path to append
+         * @return A new DatPath made out of the existing lh one and the given rh one
+         */
+        DatPath operator /(const DatPath& subPath) const;
 
         /**
          * Go up a level in the path, the given number of directories from the beginning of the path
