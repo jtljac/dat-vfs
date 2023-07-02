@@ -9,6 +9,7 @@ target_include_directories(dat-vfs PUBLIC ./include)
 target_sources(dat-vfs PRIVATE
         source/dat-vfs.cpp
         source/dat-path.cpp
+        source/dat-vfs-file-inserter.cpp
 )
 
 # Examples
