@@ -18,4 +18,4 @@ target_link_libraries(dat-vfs-tests PRIVATE Catch2::Catch2)
 target_link_libraries(dat-vfs-tests PRIVATE dat-vfs)
 
 # Start Testing
-catch_discover_tests(dat-vfs-tests)
+catch_discover_tests(dat-vfs-tests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})

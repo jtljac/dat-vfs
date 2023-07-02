@@ -4,6 +4,9 @@
 
 # include "../include/dat-vfs.h"
 
+#include <algorithm>
+#include <numeric>
+
 DVFS::DatVFS::DatVFS() {
     folders["."] = this;
     // Lacking a parent, set the parent to itself
@@ -28,6 +31,8 @@ DVFS::DatVFS::~DatVFS() {
 }
 
 DVFS::DatVFS* DVFS::DatVFS::createFolder(const DVFS::DatPath& path, bool recursive) {
+    if (path.empty()) return nullptr;
+
     if (path.depth() > 1) {
         DatVFS* folder = getFolder(path.getRoot());
         if (folder == nullptr) {
@@ -167,10 +172,11 @@ bool DVFS::DatVFS::empty(const DVFS::DatPath& path) const {
         else return folder->empty(path.increment());
     }
 
-    return folders.empty() && files.empty();
+    // There's always "." and ".."
+    return folders.size() <= 2 && files.empty();
 }
 
-bool DVFS::DatVFS::isRoot(const std::filesystem::path& test) const {
+bool DVFS::DatVFS::isRoot() const {
     return getFolder("..") == this;
 }
 
@@ -257,7 +263,8 @@ int DVFS::DatVFS::countFolders(const DVFS::DatPath& path, bool recursive,
         else return folder->countFolders(path.increment(), recursive, predicate);
     }
 
-    int count = std::accumulate(folders.begin(), folders.end(), 0, [&path, recursive, &predicate](int acc, const auto& pair){
+    // Start at negative 2 to account for "." and ".."
+    int count = -2 + std::accumulate(folders.begin(), folders.end(), 0, [&path, recursive, &predicate](int acc, const auto& pair){
         if (recursive) acc += pair.second->countFolders(path, recursive, predicate);
         return predicate(pair.first, pair.second) ? acc + 1 : acc;
     });

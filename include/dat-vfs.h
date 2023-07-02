@@ -5,11 +5,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <unordered_map>
-#include <filesystem>
-#include <cstring>
-#include <algorithm>
-#include <numeric>
+#include <functional>
 
 #include "dat-path.h"
 #include "dat-vfs-file.h"
@@ -114,7 +112,7 @@ namespace DVFS {
           * Check if this folder is the root of the VFS
           * @return true if this folder is the roof of the VFS
           */
-         bool isRoot(const std::filesystem::path& test) const;
+         bool isRoot() const;
 
         /**
          * List the files in a directory
@@ -138,7 +136,6 @@ namespace DVFS {
          */
         int prune(const DatPath& path = DatPath(), bool recursive = false);
 
-        // Count Files (recursive, filter)
         /**
          * Count the number of files that match the filter in the given folder
          * <br>
