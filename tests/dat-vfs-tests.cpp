@@ -72,8 +72,31 @@ TEST_CASE("DatVFS Empty VFS", "[DatVFS]") {
     // Mount file
     SECTION("Mount File") {
         DatPath path("test");
-        REQUIRE(vfs->mountFile(path, new MockDVFSFile));
+        IDVFSFile* file = new MockDVFSFile;
+        REQUIRE(vfs->mountFile(path, file));
         REQUIRE(vfs->exists(path) == 1);
+    }
+
+
+    SECTION("Mount File reference counting") {
+        DatPath path("test");
+        DatPath path2("test2");
+        IDVFSFile* file = new MockDVFSFile;
+        REQUIRE(file->getReferenceCount() == 0);
+        REQUIRE(vfs->mountFile(path, file));
+        REQUIRE(vfs->exists(path) == 1);
+        REQUIRE(file->getReferenceCount() == 1);
+
+        // Mounting in the second place
+        REQUIRE(vfs->mountFile(path2, file));
+        REQUIRE(vfs->exists(path2) == 1);
+        REQUIRE(vfs->getFile(path) == vfs->getFile(path2));
+        REQUIRE(file->getReferenceCount() == 2);
+
+        // Unmounting
+        REQUIRE(vfs->unmountFile(path2));
+        REQUIRE(vfs->exists(path2) == 0);
+        REQUIRE(file->getReferenceCount() == 1);
     }
 
     SECTION("Mount file Create Folders") {
@@ -190,7 +213,7 @@ TEST_CASE("DatVFS populated VFS", "[DatVFS]") {
         REQUIRE_FALSE(vfs->getFile(path) == file);
     }
 
-    // Mount folder
+    // Create folder
     SECTION("Create folder already exists") {
         DatPath path("folder");
         REQUIRE_FALSE(vfs->createFolder(path) != nullptr);
@@ -202,5 +225,37 @@ TEST_CASE("DatVFS populated VFS", "[DatVFS]") {
     // Is Root
     SECTION("Is root in sub-folder") {
         REQUIRE_FALSE(vfs->getFolder("folder")->isRoot());
+    }
+
+    // Count Files
+    SECTION("Count files") {
+        REQUIRE(vfs->countFiles("folder") == 4);
+    }
+
+    SECTION("Count files with predicate") {
+        int count = vfs->countFiles("folder", false, [](std::string name, IDVFSFile* file){
+            return name.length() > 4;
+        });
+        REQUIRE(count == 3);
+    }
+
+    SECTION("Count files recursive") {
+        REQUIRE(vfs->countFiles("folder2", true) == 8);
+    }
+
+    // Count Folders
+    SECTION("Count Folders") {
+        REQUIRE(vfs->countFolders() == 2);
+    }
+
+    SECTION("Count folders with predicate") {
+        int count = vfs->countFolders("", false, [](std::string name, DatVFS* folder){
+            return name.length() > 6;
+        });
+        REQUIRE(count == 1);
+    }
+
+    SECTION("Count files recursive") {
+        REQUIRE(vfs->countFolders("", true) == 3);
     }
 }

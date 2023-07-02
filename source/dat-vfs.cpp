@@ -25,7 +25,8 @@ DVFS::DatVFS::~DatVFS() {
     folders.clear();
 
     for (auto& file: files) {
-        delete file.second;
+        // Only delete if we know this is the only reference to the file
+        if (file.second->decrementReferences() <= 0) delete file.second;
     }
     files.clear();
 }
@@ -70,6 +71,7 @@ bool DVFS::DatVFS::mountFile(const DVFS::DatPath& path, DVFS::IDVFSFile* dvfsFil
     if (exists(path)) return false;
 
     files.emplace((std::string) path.getRoot(), dvfsFile);
+    dvfsFile->incrementReferences();
     return true;
 }
 
@@ -98,7 +100,7 @@ int DVFS::DatVFS::mountFiles(const DVFS::DatPath& basePath, const DVFS::IDVFSFil
     return count;
 }
 
-bool DVFS::DatVFS::unmountFile(const DVFS::DatPath& path) {
+bool DVFS::DatVFS::unmountFile(const DVFS::DatPath& path, bool deleteDVFSFile) {
     if (path.depth() > 1) {
         DatVFS* folder = getFolder(path.getRoot());
         if (folder == nullptr) return false;
@@ -111,7 +113,10 @@ bool DVFS::DatVFS::unmountFile(const DVFS::DatPath& path) {
     if (idvfsFile == nullptr) return false;
 
     files.erase((std::string) path);
-    delete idvfsFile;
+
+    // Only delete if we know this is the only reference in the DVFS
+    if (idvfsFile->decrementReferences() <= 0 && deleteDVFSFile) delete idvfsFile;
+
     return true;
 }
 
@@ -218,6 +223,14 @@ int DVFS::DatVFS::prune(const DVFS::DatPath& path, bool recursive) {
     int count = 0;
     auto it = folders.begin();
     while (it != folders.end()) {
+        std::string name = it->first;
+
+        // Skip Infinite recursion
+        if (name == "." || name == "..") {
+            ++it;
+            continue;
+        }
+
         DatVFS* folder = it->second;
 
         // Do recursive first, so we can prune a folder that becomes empty after pruning
@@ -248,6 +261,8 @@ int DVFS::DatVFS::countFiles(const DVFS::DatPath& path, bool recursive,
 
     if (recursive) {
         count += std::accumulate(folders.begin(), folders.end(), 0, [&predicate, &path](int acc, const auto& pair) {
+            // Skip Infinite recursion
+            if (pair.first == "." || pair.first == "..") return acc;
             return acc + pair.second->countFiles(path, true, predicate);
         });
     };
@@ -263,9 +278,12 @@ int DVFS::DatVFS::countFolders(const DVFS::DatPath& path, bool recursive,
         else return folder->countFolders(path.increment(), recursive, predicate);
     }
 
-    // Start at negative 2 to account for "." and ".."
-    int count = -2 + std::accumulate(folders.begin(), folders.end(), 0, [&path, recursive, &predicate](int acc, const auto& pair){
-        if (recursive) acc += pair.second->countFolders(path, recursive, predicate);
+    int count = std::accumulate(folders.begin(), folders.end(), 0, [&path, recursive, &predicate](int acc, const auto& pair){
+        // Skip Infinite recursion
+        if (pair.first == "." || pair.first == "..") return acc;
+        if (recursive) {
+            acc += pair.second->countFolders(path, recursive, predicate);
+        }
         return predicate(pair.first, pair.second) ? acc + 1 : acc;
     });
 
@@ -285,6 +303,7 @@ std::string DVFS::DatVFS::tree(const std::string& prefix) const {
 
             stream << prefix << (end ? "└── " : "├── ") << name << std::endl;
 
+            // Skip infinite recursion
             if (name == "." || name == "..") {
                 ++it;
                 continue;

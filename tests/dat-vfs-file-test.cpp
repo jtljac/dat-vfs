@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include <dat-vfs-file.h>
+#include <iostream>
 
 using namespace DVFS;
 
@@ -15,9 +16,7 @@ TEST_CASE("LooseDVFSFile", "[IDVFSFile]") {
         const std::filesystem::path filePath("./include/dat-vfs.h");
         IDVFSFile* dvfsFile = new LooseDVFSFile(filePath);
 
-        SECTION("Validation") {
-            REQUIRE(dvfsFile->isValidFile());
-        }
+        REQUIRE(dvfsFile->isValidFile());
 
         SECTION("Filesize") {
             REQUIRE(dvfsFile->fileSize() == std::filesystem::file_size(filePath));
@@ -46,9 +45,7 @@ TEST_CASE("LooseDVFSFile", "[IDVFSFile]") {
     SECTION("Invalid File") {
         IDVFSFile* dvfsFile = new LooseDVFSFile("./blatantly/bad/path");
 
-        SECTION("Validation") {
-            REQUIRE_FALSE(dvfsFile->isValidFile());
-        }
+        REQUIRE_FALSE(dvfsFile->isValidFile());
 
         SECTION("Filesize") {
             REQUIRE(dvfsFile->fileSize() == 0);

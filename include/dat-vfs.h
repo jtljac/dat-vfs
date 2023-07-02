@@ -65,11 +65,14 @@ namespace DVFS {
 
         // Unmount
         /**
-         * Unmount a file from the VFS and delete it's DVFSFile entry
+         * Unmount a file from the VFS
          * @param path The path to the file to unmount
+         * @param deleteDVFSFile Whether to delete the DVFSFile entry after unmounting it, defaults to true.
+         * <br>
+         * <b>Warning, If this is set to false, then failing to handle the DVFSFile will result in a memory leak!<b>
          * @return True if successful
          */
-        bool unmountFile(const DatPath& path);
+        bool unmountFile(const DatPath& path, bool deleteDVFSFile = true);
 
         /**
          * Remove a folder from the VFS, deleting it and all files and folders contained within
