@@ -81,3 +81,12 @@ namespace DVFS {
         [[nodiscard]] bool empty() const;
     };
 }
+
+template <>
+struct std::hash<DVFS::DatPath>
+{
+    std::size_t operator()(const DVFS::DatPath& k) const
+    {
+        return hash<std::string>()((std::string) k);
+    }
+};
