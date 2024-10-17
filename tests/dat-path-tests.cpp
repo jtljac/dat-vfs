@@ -1,7 +1,3 @@
-//
-// Created by jacob on 29/06/23.
-//
-
 #include <catch2/catch.hpp>
 
 #include <dat-path.h>

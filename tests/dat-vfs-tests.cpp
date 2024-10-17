@@ -1,6 +1,3 @@
-//
-// Created by jacob on 30/06/23.
-//
 #include <catch2/catch.hpp>
 #include <iostream>
 

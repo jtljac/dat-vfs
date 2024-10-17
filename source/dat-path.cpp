@@ -1,7 +1,3 @@
-//
-// Created by jacob on 29/06/23.
-//
-
 #include "../include/dat-path.h"
 
 #include <algorithm>

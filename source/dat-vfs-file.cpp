@@ -1,7 +1,3 @@
-//
-// Created by jacob on 02/07/23.
-//
-
 #include "../include/dat-vfs-file.h"
 
 #include <fstream>

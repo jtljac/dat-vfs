@@ -1,7 +1,3 @@
-//
-// Created by jacob on 01/07/23.
-//
-
 #include <catch2/catch.hpp>
 #include <cstring>
 #include <fstream>
