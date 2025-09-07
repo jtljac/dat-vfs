@@ -1,8 +1,10 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
-#include <dat-path.h>
+#include <DatPath.h>
+#include <ranges>
+#include <oneapi/tbb/detail/_range_common.h>
 
-using namespace DVFS;
+using namespace Dvfs;
 
 TEST_CASE("DatPath initialisation", "[DatPath]") {
     SECTION("Empty Initialisation") {
@@ -86,46 +88,6 @@ TEST_CASE("DatPath correct depth", "[DatPath]") {
     SECTION("Depth 0") {
         DatPath testPath("");
         REQUIRE(testPath.depth() == 0);
-    }
-}
-
-TEST_CASE("DatPath correctly increments", "[DatPath]") {
-    DatPath testPath("test/path/testing/navigation");
-
-    SECTION("Increment none") {
-        DatPath newPath = testPath.increment(0);
-        REQUIRE(newPath.depth() == 4);
-        REQUIRE((std::string) newPath == "test/path/testing/navigation");
-    }
-
-    SECTION("Increment 1") {
-        DatPath newPath = testPath.increment();
-        REQUIRE(newPath.depth() == 3);
-        REQUIRE((std::string) newPath == "path/testing/navigation");
-    }
-
-    SECTION("Increment 2") {
-        DatPath newPath = testPath.increment(2);
-        REQUIRE(newPath.depth() == 2);
-        REQUIRE((std::string) newPath == "testing/navigation");
-    }
-
-    SECTION("Increment 3") {
-        DatPath newPath = testPath.increment(3);
-        REQUIRE(newPath.depth() == 1);
-        REQUIRE((std::string) newPath == "navigation");
-    }
-
-    SECTION("Increment to end") {
-        DatPath newPath = testPath.increment(4);
-        REQUIRE(newPath.depth() == 0);
-        REQUIRE(newPath.empty());
-    }
-
-    SECTION("Increment passed end") {
-        DatPath newPath = testPath.increment(10);
-        REQUIRE(newPath.depth() == 0);
-        REQUIRE(newPath.empty());
     }
 }
 
@@ -256,5 +218,34 @@ TEST_CASE("DatPath empty") {
     SECTION("Empty") {
         DatPath path;
         REQUIRE(path.empty());
+    }
+}
+
+TEST_CASE("DatPath split") {
+    SECTION("Empty Path") {
+        DatPath base("");
+        auto result = base.split();
+
+        REQUIRE(result.empty());
+    }
+
+    SECTION("Regular Path") {
+        DatPath base("test/path/path2");
+        auto result = base.split();
+
+        REQUIRE(result.size() == 3);
+        REQUIRE(result[0] == "test");
+        REQUIRE(result[1] == "path");
+        REQUIRE(result[2] == "path2");
+    }
+
+    SECTION("Path with Empties") {
+        DatPath base("/test///test2/path/");
+        auto result = base.split();
+        REQUIRE(result.size() == 3);
+
+        REQUIRE(result[0] == "test");
+        REQUIRE(result[1] == "test2");
+        REQUIRE(result[2] == "path");
     }
 }

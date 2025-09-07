@@ -3,18 +3,18 @@
 #include <string>
 #include <vector>
 
-#include "dat-vfs-file.h"
+#include "DatVfsFile.h"
 
-namespace DVFS {
+namespace Dvfs {
     /**
      * An interface for inserting files into a VFS
      */
-    struct IDVFSFileInserter {
-        using pair = std::pair<std::string, IDVFSFile*>;
+    struct IDvfsFileInserter {
+        using pair = std::pair<std::string, IDvfsFile*>;
 
         /**
-         * Gets a vector containing all the DVFS files, paired with their path, to insert into a VFS
-         * @return A vector of DVFS files to be inserted into a VFS
+         * Gets a vector containing all the Dvfs files, paired with their path, to insert into a VFS
+         * @return A vector of Dvfs files to be inserted into a VFS
          */
         [[nodiscard]] virtual std::vector<pair> getAllFiles() const = 0;
 
@@ -23,12 +23,12 @@ namespace DVFS {
          * @param path The path of the file
          * @param idvfsFile The file that failed to insert
          */
-        virtual void handleInsertFailure(const std::string& path, IDVFSFile* idvfsFile) const;
+        virtual void handleInsertFailure(const std::string& path, IDvfsFile* idvfsFile) const;
     };
 
-    struct DVFSLooseFileInserter : public IDVFSFileInserter {
+    struct DvfsLooseFileInserter : public IDvfsFileInserter {
         std::filesystem::path directory;
-        DVFSLooseFileInserter(std::filesystem::path  directory) : directory(std::move(directory)) {}
+        DvfsLooseFileInserter(std::filesystem::path  directory) : directory(std::move(directory)) {}
 
         /** @inherit */
         [[nodiscard]] std::vector<pair> getAllFiles() const override;

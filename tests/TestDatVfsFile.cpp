@@ -1,16 +1,16 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <cstring>
 #include <fstream>
 
-#include <dat-vfs-file.h>
+#include <DatVfsFile.h>
 #include <iostream>
 
-using namespace DVFS;
+using namespace Dvfs;
 
-TEST_CASE("LooseDVFSFile", "[IDVFSFile]") {
+TEST_CASE("LooseDvfsFile", "[IDvfsFile]") {
     SECTION("Valid File") {
-        const std::filesystem::path filePath("./include/dat-vfs.h");
-        IDVFSFile* dvfsFile = new LooseDVFSFile(filePath);
+        const std::filesystem::path filePath("../../include/DatVfs.h");
+        IDvfsFile* dvfsFile = new LooseDvfsFile(filePath);
 
         REQUIRE(dvfsFile->isValidFile());
 
@@ -39,7 +39,7 @@ TEST_CASE("LooseDVFSFile", "[IDVFSFile]") {
     }
 
     SECTION("Invalid File") {
-        IDVFSFile* dvfsFile = new LooseDVFSFile("./blatantly/bad/path");
+        IDvfsFile* dvfsFile = new LooseDvfsFile("./blatantly/bad/path");
 
         REQUIRE_FALSE(dvfsFile->isValidFile());
 

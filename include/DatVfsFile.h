@@ -3,40 +3,40 @@
 #include <cstdint>
 #include <filesystem>
 
-namespace DVFS {
+namespace Dvfs {
     /**
      * An interface for files stored inside the VFS
      */
-    class IDVFSFile {
+    class IDvfsFile {
         /**
          * Reference counting for hard links
          * <br>
-         * This value counts the number of times the DVFSFile is stored in a VFS. When it is 0, it means no VFS stores
+         * This value counts the number of times the DvfsFile is stored in a VFS. When it is 0, it means no VFS stores
          * it and it can be removed (usually by the VFS that unmounted it).
          */
         uint8_t references = 0;
     public:
-        virtual ~IDVFSFile() = default;
+        virtual ~IDvfsFile() = default;
 
         /**
-         * Increment the number of references to this DVFSFile there are
+         * Increment the number of references to this DvfsFile there are
          * <br>
          * Warning, this function should only be used by the DatVFS, you probably shouldn't touch it
-         * @return The new number of references that exist for this DVFSFile
+         * @return The new number of references that exist for this DvfsFile
          */
         uint8_t incrementReferences();
 
         /**
-         * Decrement the number of references to this DVFSFile there are
+         * Decrement the number of references to this DvfsFile there are
          * <br>
          * Warning, this function should only be used by the DatVFS, you probably shouldn't touch it
-         * @return The new number of references that exist for this DVFSFile
+         * @return The new number of references that exist for this DvfsFile
          */
         uint8_t decrementReferences();
 
         /**
-         * Get the number of references to this DVFSFile there are
-         * @return The current number of references that exist for this DVFSFile
+         * Get the number of references to this DvfsFile there are
+         * @return The current number of references that exist for this DvfsFile
          */
         [[nodiscard]] uint8_t getReferenceCount() const;
 
@@ -67,18 +67,18 @@ namespace DVFS {
     };
 
     /**
-     * A DVFSFile implementation representing a file in the user's filesystem
+     * A DvfsFile implementation representing a file in the user's filesystem
      */
-    class LooseDVFSFile : public IDVFSFile {
+    class LooseDvfsFile : public IDvfsFile {
         /** The path to the file on disk */
         std::filesystem::path filePath;
 
     public:
         /**
-         * Create a LooseDVFSFile pointing to the file at the given path
+         * Create a LooseDvfsFile pointing to the file at the given path
          * @param filePath The path to the file on disk
          */
-        LooseDVFSFile(std::filesystem::path  filePath) : filePath(std::move(filePath)) {} // NOLINT(google-explicit-constructor)
+        LooseDvfsFile(std::filesystem::path  filePath) : filePath(std::move(filePath)) {} // NOLINT(google-explicit-constructor)
 
         /** @inherit */
         [[nodiscard]] uint64_t fileSize() const override;

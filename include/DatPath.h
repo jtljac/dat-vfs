@@ -1,8 +1,10 @@
 #pragma once
 
+#include <span>
 #include <string>
+#include <vector>
 
-namespace DVFS {
+namespace Dvfs {
 /**
  * A wrapper for strings that represents paths in a DatVFS
  * <br>
@@ -52,13 +54,6 @@ namespace DVFS {
         DatPath operator /(const DatPath& subPath) const;
 
         /**
-         * Go up a level in the path, the given number of directories from the beginning of the path
-         * @param levels The number of directories to remove
-         * @return a new path with the given number of directories removed
-         */
-        [[nodiscard]] DatPath increment(size_t levels = 1) const;
-
-        /**
          * Get a path representing the root of this path
          * @return a new path representing the root of this path
          */
@@ -75,14 +70,15 @@ namespace DVFS {
          * @return True if the path is empty
          */
         [[nodiscard]] bool empty() const;
+
+        [[nodiscard]] std::vector<std::string_view> split() const;
     };
 }
 
 template <>
-struct std::hash<DVFS::DatPath>
+struct std::hash<Dvfs::DatPath>
 {
-    std::size_t operator()(const DVFS::DatPath& k) const
-    {
-        return hash<std::string>()((std::string) k);
+    std::size_t operator()(const Dvfs::DatPath& k) const noexcept {
+        return hash<std::string>()(static_cast<std::string>(k));
     }
 };
